@@ -51,7 +51,7 @@ function RPC(host, port) {
         return !this.ws || this.ws.readyState === 3 ? true : false;
     };
     this.connectToHost = function () {
-        this.ws = new WebSocket("ws://" + this.host + ":" + this.port);
+        this.ws = new WebSocket("wss://" + this.host + ":" + this.port);
 
         if (this.onConnecting)
             this.onConnecting();
