@@ -513,6 +513,7 @@ function compile(src, parent, tmplFile, __text__) {
             __CLASS__.prototype.src.removeAttr('data-fra');
             __CLASS__.prototype.src.removeAttr('data-tagName');
             __CLASS__.prototype.src.removeAttr('data-fr');
+            __CLASS__.prototype.src.removeAttr('data-overloaded-prefix');
             __CLASS__.prototype.tmpl = true;
             __CLASS_TABLE__[className] = __CLASS__;
             src.remove();
