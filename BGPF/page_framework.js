@@ -154,10 +154,21 @@ __PF_BASE_CLASS__.prototype.remove = function (name) {
     }
 }
 __PF_BASE_CLASS__.prototype.removeSelf = function () {
+    var keys = Object.keys(this);
+    for (let x in keys) {
+        var k = keys[x];
+        if (k != '_' && k != '$' && typeof this[k] == "object" && this[k].$ != undefined)
+            this[k].$.remove();
+    }
+    /*for (let x in this) {
+        if (typeof this[x] == "object" && this[x].$ != undefined && x != 'NS' && x != '_NS' && x != '_')
+            this[x].$.remove();
+    }*/
     this.$.remove();
+
     var deleted = false;
     if (this._) {
-        for (var x in this._) {
+        for (let x in this._) {
             if (this._[x] === undefined || this._[x] === null ||
                 x === 'NS' || x === '_NS' || x === '_' ||
                 /^PF./.test(this._[x].toString()) == false)
