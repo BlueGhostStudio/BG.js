@@ -157,9 +157,6 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
     var keys = Object.keys(this);
     for (let x in keys) {
         var k = keys[x];
-        console.log("---key---", k);
-        if (k == '_NS')
-            console.log("---v---", this[k]);
         if (k != '_' && k != 'NS' && k != '_NS' && k != '$' && typeof this[k] == "object" && this[k].$ != undefined) {
             this[k].$.remove();
         }
