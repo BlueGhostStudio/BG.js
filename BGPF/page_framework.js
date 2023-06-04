@@ -275,7 +275,8 @@ function compile(src, parent, tmplFile, __text__) {
                     .not('[data-fi]')
                     .not('pf-script')
                     .not('[data-ft]')
-                    .not('pf-extend');
+                    .not('pf-extend')
+                    .not('pf-data');
                 children.each(function () {
                     // __this__[__NAME__ ($(this))] = compile ($(this), __this__, tmplFile);
 
@@ -308,6 +309,26 @@ function compile(src, parent, tmplFile, __text__) {
                         var targetInto = objElem.attr("data-putInto");
                         if (targetInto.length > 0 && __this__[targetInto])
                             __this__[targetInto].$.append(objElem);
+                    }
+                });
+
+                __this__['__data__'] = {};
+                children = e.children('pf-data');
+                children.each(function () {
+                    var objElem = $(this).remove();
+                    var name = objElem.attr('data-fn');
+                    if (name) {
+                        var dataObj = compile(objElem, __this__, tmplFile);
+                        $.each(objElem[0].attributes, function () {
+                            if (this.name !== "data-fn")
+                                dataObj[this.name.replace(/^data-/, '')] = this.value;
+                        });
+
+                        if (!(name in __this__['__data__']))
+                            __this__['__data__'][name] = [];
+
+                        var dataArray = __this__['__data__'][name];
+                        dataArray.push(dataObj);
                     }
                 });
             })(__this__.$);
@@ -450,6 +471,7 @@ function compile(src, parent, tmplFile, __text__) {
 
         if (fr !== undefined) {
             var subElems = src.find('>[data-putInto],>[data-append],>[data-prepend],>[data-custom-place]').clone();
+            var elemDatas = src.find('>pf-data').clone();
 
             var tagName = baseClass.prototype.tagName;
             if (tagName) {
@@ -463,6 +485,7 @@ function compile(src, parent, tmplFile, __text__) {
                 src.empty();
             src.append(baseClass.prototype.src.html());
             src.append(subElems);
+            src.append(elemDatas);
 
             // var tmpNS = baseClass.prototype.src.attr ('data-fns');
             // if (tmpNS !== undefined)
