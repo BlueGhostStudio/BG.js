@@ -30,8 +30,19 @@ function RPC(url, port) {
                 this.onReturn(mID);
 
             if (this.calling[mID]) {
-                this.calling[mID].call(this, data.values.length > 1
+                this.calling[mID].__return__.call(this, data.values.length > 1
                     ? data.values : data.values[0]);
+
+                delete this.calling[mID];
+            }
+        } else if (data.type === "error") {
+            var mID = data.mID;
+
+            if (this.onError)
+                this.onError(mID);
+
+            if (this.calling[mID]) {
+                this.calling[mID].__error__.call(this, data);
 
                 delete this.calling[mID];
             }
@@ -67,7 +78,7 @@ function RPC(url, port) {
         }).bind(this);
         this.ws.onerror = (function () {
             if (this.onError)
-                this.onError();
+                this.onError(-1);
         });
         this.ws.onmessage = this.onReviceData;
     };
@@ -101,19 +112,25 @@ function RPC(url, port) {
         this.ws.send(request);
 
         return {
-            onReturn: (function (cb) {
-                this.calling[currentMID] = cb;
+            onReturn: (function (retCB, errCB) {
+                this.calling[currentMID] = {
+                    __return__: retCB,
+                    __error__: errCB
+                };
             }).bind(this)
         };
     };
     this.asyncCall = function () {
         // console.log (this, arguments);
         var args = arguments;
-        return new Promise((function (resolve) {
+        return new Promise((resolve, reject) => {
+            this.call.apply(this, args).onReturn((ret) => { resolve(ret) }, (ret) => { reject(ret) });
+        });
+        /*return new Promise((function (resolve, reject) {
             this.call.apply(this, args).onReturn(function (ret) {
                 resolve(ret);
             });
-        }).bind(this));
+        }).bind(this));*/
         /*return new Promise (resolve => {
             this.call.apply (this, arguments).onReturn (ret => {
                 resolve (ret);
