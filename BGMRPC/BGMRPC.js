@@ -8,7 +8,7 @@ function RPC(url, port) {
     this.onDisconnecting = undefined;
     this.onDisconnected = undefined;
     this.onError = undefined;
-    this.remoteSignalListener = [];
+    //this.remoteSignalListener = [];
     this.onCalling = undefined;
     this.onReturn = undefined;
     this.onReviceData = (function (evt) {
@@ -17,12 +17,12 @@ function RPC(url, port) {
             if (this.onRemoteSignal)
                 this.onRemoteSignal(data.object, data.signal, data.args);
 
-            if (this.remoteSignalListener[data.object] && this.remoteSignalListener[data.object][data.signal]) {
+            /*if (this.remoteSignalListener[data.object] && this.remoteSignalListener[data.object][data.signal]) {
                 var remoteSignal
                     = this.remoteSignalListener[data.object][data.signal];
                 for (var x in remoteSignal)
                     remoteSignal[x].call(this, data.args);
-            }
+            }*/
         } else if (data.type === "return") {
             var mID = data.mID;
 
@@ -63,6 +63,8 @@ function RPC(url, port) {
     };
     this.connectToHost = function () {
         //this.ws = new WebSocket("wss://" + this.host + ":" + this.port);
+        this.close();
+
         this.ws = new WebSocket(this.url + ":" + this.port);
 
         if (this.onConnecting)
@@ -83,9 +85,12 @@ function RPC(url, port) {
         this.ws.onmessage = this.onReviceData;
     };
     this.close = function () {
-        if (this.onDisconnecting)
-            this.onDisconnecting();
-        this.ws.close();
+        if (this.ws !== undefined) {
+            if (this.onDisconnecting)
+                this.onDisconnecting();
+            this.ws.close();
+            delete this.ws;
+        }
     };
 
     this.calling = [];
@@ -137,7 +142,7 @@ function RPC(url, port) {
             });
         });*/
     }
-    this.remoteSignal = function (obj, sig, cb) {
+    /*this.remoteSignal = function (obj, sig, cb) {
         if (!this.remoteSignalListener[obj])
             this.remoteSignalListener[obj] = [];
 
@@ -149,6 +154,6 @@ function RPC(url, port) {
         this.remoteSignalListener[obj][sig].push(cb);
         // }
         console.log(this.remoteSignalListener);
-    };
+    };*/
 }
 
