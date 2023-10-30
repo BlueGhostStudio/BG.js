@@ -99,12 +99,32 @@ __PF_BASE_CLASS__.prototype.html = function (h) {
 }
 __PF_BASE_CLASS__.prototype.show = function () { this.$.show() }
 __PF_BASE_CLASS__.prototype.hide = function () { this.$.hide() }
+
+function randomName(obj) {
+    let name = "";
+    let i = 0;
+
+    while (name.length === 0 || obj[name] !== undefined) {
+        while (i < 6) {
+            let code = Math.round(Math.random() * 57) + 65;
+            if (code <= 90 || code >= 97) {
+                name += String.fromCharCode(code);
+                i++;
+            }
+        }
+    }
+
+    return name;
+}
+
 __PF_BASE_CLASS__.prototype.putInto = function (p, name, opt) {
     p.$.append(this.$);
     if (name === true)
         p[this.__NAME__()] = this;
     else if (name !== undefined)
         p[name] = this;
+    else
+        p[randomName(p)] = this;
 
     this._ = p;
     if (this/*.__proto__*/.nonauto) {
@@ -119,6 +139,8 @@ __PF_BASE_CLASS__.prototype.prepend = function (p, name, opt) {
         p[this.__NAME__()] = this;
     else if (name !== undefined)
         p[name] = this;
+    else
+        p[randomName(p)] = this;
 
     this._ = p;
     if (this/*.__proto__*/.nonauto) {
@@ -135,30 +157,38 @@ __PF_BASE_CLASS__.prototype.__CLASSNAME__ = function () {
 }
 __PF_BASE_CLASS__.prototype.each = function (cb) {
     for (var x in this) {
-        if ((this[x] && /^PF./.test(this[x].toString()) == false) || x === 'NS' || x === '_NS' || x === '_')
+        if (!this[x] || typeof this[x] !== 'object' || !("$" in this[x]) || x === 'NS' || x === '_NS' || x === '_')
             continue;
 
         cb.call(this, x, this[x]);
     }
 }
 __PF_BASE_CLASS__.prototype.empty = function () {
-    this.$.empty();
+    /*this.$.empty();
     this.each(function (name, value) {
         delete this[name];
+    });*/
+    this.each((name, value) => {
+        this[name].removeSelf();
     });
 }
 __PF_BASE_CLASS__.prototype.remove = function (name) {
-    if (this[name]) {
-        this[name].$.remove();
-        delete this[name];
-    }
+    if (this[name] && typeof this[name] == 'object' && this[name].removeSelf)
+        this[name].removeSelf();
 }
 __PF_BASE_CLASS__.prototype.removeSelf = function () {
+    this.deleting = true;
     var keys = Object.keys(this);
     for (let x in keys) {
         var k = keys[x];
-        if (k != '_' && k != 'NS' && k != '_NS' && k != '$' && typeof this[k] == "object" && this[k].$ != undefined) {
-            this[k].$.remove();
+        /*if (k != '_' && k != 'NS' && k != '_NS' && k != '$' && typeof this[k] == "object" && this[k].$ != undefined) {
+            this[k].removeSelf();
+        }*/
+        if (k != '_' && k != 'NS' && k != '_NS' && k != '$' && this[k] !== undefined && this[k] !== null) {
+            if (typeof this[k] == 'object' && this[k].removeSelf && !this[k].deleting)
+                this[k].removeSelf();
+            else
+                delete this[k];
         }
     }
     /*for (let x in this) {
@@ -184,6 +214,8 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
 
     if (!deleted)
         delete this;
+
+    this.destroy = true;
 }
 
 // <div data-fi></div>
