@@ -218,8 +218,16 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
     this.destroy = true;
 }
 
-__PF_BASE_CLASS__.prototype.superTmpl = function () {
-    return __CLASS_TABLE__[this.__superTmpl__].prototype;
+__PF_BASE_CLASS__.prototype.superTmpl = function (tmpl) {
+    //return __CLASS_TABLE__[this.__superTmpl__].prototype;
+    var currentSuperTmpl = this;
+
+    do {
+        var currentSuperTmplName = currentSuperTmpl.__superTmpl__;
+        currentSuperTmpl = __CLASS_TABLE__[currentSuperTmplName].prototype;
+    } while (currentSuperTmplName !== tmpl && currentSuperTmpl !== undefined);
+
+    return currentSuperTmpl;
 }
 
 // <div data-fi></div>
@@ -489,11 +497,11 @@ function compile(src, parent, tmplFile, __text__) {
                 __CLASS__.prototype[funName]
                     = eval('(function (' + args + ') {' + funSrc + '})');
                 __CLASS__.prototype.funs[funName] = __CLASS__.prototype[funName];
-                var olp = $(this).attr('data-overloaded-prefix');
+                /*var olp = $(this).attr('data-overloaded-prefix');
                 if (olp) {
                     __CLASS__.prototype[olp + funName] = __CLASS__.prototype[funName];
                     __CLASS__.prototype.funs[olp + funName] = __CLASS__.prototype[funName];
-                }
+                }*/
                 if (overloaded_prefix) {
                     var olFunName = overloaded_prefix + '_' + funName;
                     __CLASS__.prototype[olFunName] = __CLASS__.prototype[funName];
