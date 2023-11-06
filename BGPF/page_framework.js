@@ -218,6 +218,10 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
     this.destroy = true;
 }
 
+__PF_BASE_CLASS__.prototype.superTmpl = function () {
+    return __CLASS_TABLE__[this.__superTmpl__].prototype;
+}
+
 // <div data-fi></div>
 // <div data-fw></div>
 // <div data-ft="class" data-fn></div>
@@ -414,6 +418,7 @@ function compile(src, parent, tmplFile, __text__) {
         }
         __CLASS__.prototype.events = [];
         __CLASS__.prototype.funs = [];
+        __CLASS__.prototype.__superTmpl__ = fr;
 
         var extend = src.attr("data-extend");
         var ext_cstr = [];
