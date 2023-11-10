@@ -428,10 +428,10 @@ function compile(src, parent, tmplFile, __text__) {
         __CLASS__.prototype.funs = [];
         __CLASS__.prototype.__superTmpl__ = fr;
 
-        var extend = src.attr("data-extend");
+        // var extend = src.attr("data-extend");
         var ext_cstr = [];
         var ext_pcstr = [];
-        if (extend) {
+        /*if (extend) {
             var extendClass = __CLASS_TABLE__[extend];
             if (extendClass) {
                 for (var x in extendClass.prototype.funs) {
@@ -453,7 +453,7 @@ function compile(src, parent, tmplFile, __text__) {
                     }
                 }
             }
-        }
+        }*/
 
         src.find('> pf-extend').each(function () {
             try {
@@ -464,7 +464,20 @@ function compile(src, parent, tmplFile, __text__) {
                 }
                 return false;
             }
-            for (var x in extendClass.funs) {
+
+            for (var x in extendClass) {
+                var ext_var = extendClass[x];
+                if (x === 'constructor')
+                    ext_cstr.push(ext_var);
+                else if (x === 'preconstructor')
+                    ext_pcstr.push(ext_var);
+                else if (typeof ext_var == 'function' && !(x in __CLASS__.prototype))
+                    __CLASS__.prototype[x] = ext_var;
+            }
+
+            $(this).remove();
+
+            /*for (var x in extendClass.funs) {
                 if (x === "constructor")
                     ext_cstr.push(extendClass.funs[x]);
                 else if (x === "preconstructor")
@@ -481,7 +494,7 @@ function compile(src, parent, tmplFile, __text__) {
                     }
                 }
                 $(this).remove();
-            }
+            }*/
         });
 
         src.find('> pf-script').each(function () {
@@ -501,12 +514,12 @@ function compile(src, parent, tmplFile, __text__) {
                 if (olp) {
                     __CLASS__.prototype[olp + funName] = __CLASS__.prototype[funName];
                     __CLASS__.prototype.funs[olp + funName] = __CLASS__.prototype[funName];
-                }*/
+                }
                 if (overloaded_prefix) {
                     var olFunName = overloaded_prefix + '_' + funName;
                     __CLASS__.prototype[olFunName] = __CLASS__.prototype[funName];
                     __CLASS__.prototype.funs[olFunName] = __CLASS__.prototype[funName];
-                }
+                }*/
             }
             $(this).remove();
         });
