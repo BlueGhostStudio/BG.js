@@ -36,7 +36,8 @@ function __import(js, autoLoad) {
     return the_loader;
 }
 
-function __NAME__(src) {  // 取得html elem的对应的名字
+var lastUnname = 0;
+/*function __NAME__(src) {  // 取得html elem的对应的名字
     var fn = src.attr('data-fn');
     var ft = src.attr('data-ft');
     var idn = src.attr('id');
@@ -50,13 +51,14 @@ function __NAME__(src) {  // 取得html elem的对应的名字
         return cln;
     else // tagName
         return src.prop("tagName").toLowerCase();
-}
+}*/
 
 function __PF_BASE_CLASS__() { }
-__PF_BASE_CLASS__.prototype.create = function (className, args) {
+
+__PF_BASE_CLASS__.prototype.create = function (className, name, args) {
     var __CLASS__ = __CLASS_TABLE__[className];
     if (__CLASS__)
-        return new __CLASS__(this, args);
+        return new __CLASS__(this, name, args);
 }
 
 __PF_BASE_CLASS__.prototype.__extend__constructors = [];
@@ -100,7 +102,7 @@ __PF_BASE_CLASS__.prototype.html = function (h) {
 __PF_BASE_CLASS__.prototype.show = function () { this.$.show() }
 __PF_BASE_CLASS__.prototype.hide = function () { this.$.hide() }
 
-function randomName(obj) {
+/*function randomName(obj) {
     let name = "";
     let i = 0;
 
@@ -115,16 +117,20 @@ function randomName(obj) {
     }
 
     return name;
-}
+}*/
 
 __PF_BASE_CLASS__.prototype.putInto = function (p, name, opt) {
     p.$.append(this.$);
-    if (name === true)
-        p[this.__NAME__()] = this;
+    /*if (name === true)
+        p[this.__NAME__] = this;
     else if (name !== undefined)
         p[name] = this;
     else
-        p[randomName(p)] = this;
+        p[randomName(p)] = this;*/
+    if (name !== undefined)
+        this.__NAME__ = name;
+
+    p[this.__NAME__] = this;
 
     this._ = p;
     if (this/*.__proto__*/.nonauto) {
@@ -134,13 +140,17 @@ __PF_BASE_CLASS__.prototype.putInto = function (p, name, opt) {
     }
 }
 __PF_BASE_CLASS__.prototype.prepend = function (p, name, opt) {
-    p.$.prepend(this.$);
+    /*p.$.prepend(this.$);
     if (name === true)
-        p[this.__NAME__()] = this;
+        p[this.__NAME__] = this;
     else if (name !== undefined)
         p[name] = this;
     else
-        p[randomName(p)] = this;
+        p[randomName(p)] = this;*/
+    if (name !== undefined)
+        this.__NAME__ = name;
+
+    p[this.__NAME__] = this;
 
     this._ = p;
     if (this/*.__proto__*/.nonauto) {
@@ -149,9 +159,9 @@ __PF_BASE_CLASS__.prototype.prepend = function (p, name, opt) {
         this.constructor(args);
     }
 }
-__PF_BASE_CLASS__.prototype.__NAME__ = function () {
+/*__PF_BASE_CLASS__.prototype.__NAME__ = function () {
     return __NAME__(this.$);
-}
+}*/
 __PF_BASE_CLASS__.prototype.__CLASSNAME__ = function () {
     return this.toString();
 }
@@ -262,15 +272,28 @@ function compile(src, parent, tmplFile, __text__) {
     // if (className === undefined)
     //     className = src.attr ('data-fr');
     if (className === undefined) {
-        className = __NAME__(src);
+        className = src.attr("data-fn") || src.attr("id");
+        if (!className) {
+            var classList = src.attr("class");
+            className = classList ? classList.split(' ')[0] : undefined;
+        }
+        if (!className)
+            className = src.prop("tagName").toLowerCase();
+
         if (parent)
-            className = parent.toString().replace(/^PF\./, '') + '.' + className;
+            className = parent.toString().replace(/^PF\::/, '') + '::' + className;
     }
 
     var __CLASS__;// = __CLASS_TABLE__[className];
 
     if (__CLASS__ === undefined) {
-        __CLASS__ = function (parent, args) {
+        __CLASS__ = function (parent, name, args) {
+            if (name === undefined) {
+                this.__NAME__ = "unname_" + lastUnname;
+                lastUnname++;
+            } else
+                this.__NAME__ = name;
+
             // if the obj is tmpl or not
             if (this/*.__proto__*/.tmpl)
                 this.$ = this/*.__proto__*/.src.clone();
@@ -334,7 +357,8 @@ function compile(src, parent, tmplFile, __text__) {
                     var obj = compile($(this), __this__, tmplFile, __text__);
                     if (obj === false)
                         return;
-                    __this__[__NAME__($(this))] = obj;
+                    //__this__[__NAME__($(this))] = obj;
+                    __this__[obj.__NAME__] = obj;
                 });
 
                 children = e.children('[data-fw="true"]');
@@ -420,9 +444,9 @@ function compile(src, parent, tmplFile, __text__) {
 
         __CLASS__.prototype.toString = function () {
             if (fr !== undefined)
-                return 'PF.' + fr + className;
+                return 'PF::' + fr + "::" + className;
             else
-                return 'PF.' + className;
+                return 'PF::' + className;
         }
         __CLASS__.prototype.events = [];
         __CLASS__.prototype.funs = [];
@@ -503,7 +527,7 @@ function compile(src, parent, tmplFile, __text__) {
             if (ev)
                 __CLASS__.prototype.events[ev] = eval('(function (event) {' + funSrc + '})');
             else {
-                var funName = __NAME__($(this));
+                var funName = $(this).attr('data-fn'); //__NAME__($(this));
                 var args = $(this).attr('data-args');
                 if (!args)
                     args = "";
@@ -629,19 +653,21 @@ function compile(src, parent, tmplFile, __text__) {
 
     var obj;
     if (!__CLASS__.prototype.tmpl) {
+        var objName = src.attr("data-fn") || src.attr("id");
+
         if (fr !== undefined && frArgs !== undefined) {
-            obj = new __CLASS__(parent, eval('[' + frArgs + ']'));
+            obj = new __CLASS__(parent, objName, eval('[' + frArgs + ']'));
         } else
-            obj = new __CLASS__(parent);
+            obj = new __CLASS__(parent, objName);
     }
 
     return obj;
 }
 
-function newObject(className, parent, args) {
+function newObject(className, parent, name, args) {
     var __CLASS__ = __CLASS_TABLE__[className];
     if (__CLASS__)
-        return new __CLASS__(parent, args);
+        return new __CLASS__(parent, name, args);
 }
 
 function loadTemplates(tmpls, endCallback) {
