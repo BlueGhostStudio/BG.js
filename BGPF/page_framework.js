@@ -414,7 +414,8 @@ function compile(src, parent, tmplFile, __text__) {
             for (var x in __this__/*.__proto__*/.events) {
                 __this__.$.on(x, __this__/*.__proto__*/.events[x].bind(this));
             }
-            __this__.$.find('*').removeAttr('data-fi data-fr data-fw data-ft data-args data-fn data-fns data-putInto data-append data-prepend data-custom-place data-overloaded-prefix');
+            //__this__.$.find('*').removeAttr('data-fi data-fr data-fw data-ft data-args data-fn data-fns data-putInto data-append data-prepend data-custom-place data-overloaded-prefix');
+            this.$.removeAttr('data-fi data-fr data-fw data-ft data-args data-fn data-fns data-putInto data-append data-prepend data-custom-place data-overloaded-prefix');
             __this__.$.find('pf-script').remove();
         }
 
