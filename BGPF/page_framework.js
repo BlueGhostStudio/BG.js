@@ -294,6 +294,9 @@ function compile(src, parent, tmplFile, __text__) {
             } else
                 this.__NAME__ = name;
 
+            if (parent)
+                parent[this.__NAME__] = this;
+
             // if the obj is tmpl or not
             if (this/*.__proto__*/.tmpl)
                 this.$ = this/*.__proto__*/.src.clone();
@@ -358,7 +361,7 @@ function compile(src, parent, tmplFile, __text__) {
                     if (obj === false)
                         return;
                     //__this__[__NAME__($(this))] = obj;
-                    __this__[obj.__NAME__] = obj;
+                    //__this__[obj.__NAME__] = obj;
                 });
 
                 children = e.children('[data-fw="true"]');
