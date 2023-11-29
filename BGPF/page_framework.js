@@ -179,8 +179,10 @@ __PF_BASE_CLASS__.prototype.empty = function () {
         delete this[name];
     });*/
     this.each((name, value) => {
-        this[name].removeSelf();
+        if (this[name] !== this)
+            this[name].removeSelf();
     });
+    this.$.empty();
 }
 __PF_BASE_CLASS__.prototype.remove = function (name) {
     if (this[name] && typeof this[name] == 'object' && this[name].removeSelf)
@@ -194,7 +196,7 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
         /*if (k != '_' && k != 'NS' && k != '_NS' && k != '$' && typeof this[k] == "object" && this[k].$ != undefined) {
             this[k].removeSelf();
         }*/
-        if (k != '_' && k != 'NS' && k != '_NS' && k != '$' && this[k] !== undefined && this[k] !== null) {
+        if (k != '_' && k != 'NS' && k != '_NS' && k != '$' && this[k] !== undefined && this[k] !== null && this[k] !== this) {
             if (typeof this[k] == 'object' && this[k].removeSelf && !this[k].deleting)
                 this[k].removeSelf();
             else
