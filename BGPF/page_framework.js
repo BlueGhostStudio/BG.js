@@ -401,7 +401,7 @@ function compile(src, parent, tmplFile, __text__) {
                     var objElem = $(this).remove();
                     var name = objElem.attr('data-fn');
                     if (name) {
-                        var dataObj = compile(objElem, __this__, tmplFile);
+                        var dataObj = compile(objElem, undefined, tmplFile);
                         $.each(objElem[0].attributes, function () {
                             if (this.name !== "data-fn")
                                 dataObj[this.name.replace(/^data-/, '')] = this.value;
