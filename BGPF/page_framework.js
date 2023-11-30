@@ -291,13 +291,23 @@ function compile(src, parent, tmplFile, __text__) {
     if (__CLASS__ === undefined) {
         __CLASS__ = function (parent, name, args) {
             if (name === undefined) {
-                this.__NAME__ = "unname_" + lastUnname;
-                lastUnname++;
+                if (parent)
+                    this.__NAME__ = src.prop("tagName").toLowerCase();
+                else {
+                    this.__NAME__ = "unname_" + lastUnname;
+                    lastUnname++;
+                }
             } else
                 this.__NAME__ = name;
 
-            if (parent)
+            if (parent) {
+                let i = 0;
+                while(parent[this.__NAME__]) {
+                    this.__NAME__ += '_' + i;
+                    i++;
+                }
                 parent[this.__NAME__] = this;
+            }
 
             // if the obj is tmpl or not
             if (this/*.__proto__*/.tmpl)
