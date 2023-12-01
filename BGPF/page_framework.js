@@ -252,9 +252,15 @@ var __REF_ALIAS__ = {};
 
 var __CLASS_TABLE__ = []; // 类表,以供之后定义对象
 function compile(src, parent, tmplFile, __text__, attachData) {
+    var __text__ = "";
+    src.contents().filter(function() {
+        return this.nodeType == 3;
+    }).each(function() {
+        __text__ += $(this).text();
+    });
     //var className = src.attr ('data-fc');
     src.find('script').each(function () {
-        var PFScript = $('<pf-script></pf-script');
+        var PFScript = $('<pf-script></pf-script>');
         PFScript.attr("data-fn", $(this).attr("data-fn"));
         PFScript.attr("data-fe", $(this).attr("data-fe"));
         PFScript.attr("data-args", $(this).attr("data-args"));
@@ -310,12 +316,13 @@ function compile(src, parent, tmplFile, __text__, attachData) {
             }
 
             // if the obj is tmpl or not
-            if (this/*.__proto__*/.tmpl)
+            if (this/*.__proto__*/.tmpl) {
                 this.$ = this/*.__proto__*/.src.clone();
-            else
+                this["__text__"] = undefined;
+            } else {
                 this.$ = this/*.__proto__*/.src;
-
-            this["__text__"] = __text__;
+                this["__text__"] = __text__;
+            }
 
             if (attachData && typeof attachData === "object") {
                 for (let x in attachData)
@@ -367,12 +374,12 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                 children.each(function () {
                     // __this__[__NAME__ ($(this))] = compile ($(this), __this__, tmplFile);
 
-                    var __text__ = "";
+                    /*var __text__ = "";
                     $(this).contents().filter(function () {
                         return this.nodeType == 3;
                     }).each(function () {
                         __text__ += $(this).text();
-                    });
+                    });*/
 
                     var obj = compile($(this), __this__, tmplFile, __text__);
                     if (obj === false)
