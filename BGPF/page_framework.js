@@ -251,7 +251,7 @@ var __REF_ALIAS__ = {};
 
 
 var __CLASS_TABLE__ = []; // 类表,以供之后定义对象
-function compile(src, parent, tmplFile, __text__) {
+function compile(src, parent, tmplFile, __text__, attachData) {
     //var className = src.attr ('data-fc');
     src.find('script').each(function () {
         var PFScript = $('<pf-script></pf-script');
@@ -316,6 +316,11 @@ function compile(src, parent, tmplFile, __text__) {
                 this.$ = this/*.__proto__*/.src;
 
             this["__text__"] = __text__;
+
+            if (attachData && typeof attachData === "object") {
+                for (let x in attachData)
+                    this[x] = attachData[x];
+            }
 
             // process the obj in which namespace
             var pN = parent ? parent.NS : undefined;
