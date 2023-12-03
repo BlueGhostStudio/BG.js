@@ -318,10 +318,10 @@ function compile(src, parent, tmplFile, __text__, attachData) {
             // if the obj is tmpl or not
             if (this/*.__proto__*/.tmpl) {
                 this.$ = this/*.__proto__*/.src.clone();
-                this["__text__"] = undefined;
+                this["__TEXT__"] = undefined;
             } else {
                 this.$ = this/*.__proto__*/.src;
-                this["__text__"] = __text__;
+                this["__TEXT__"] = __text__;
             }
 
             if (attachData && typeof attachData === "object") {
