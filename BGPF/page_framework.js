@@ -428,6 +428,8 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                     // var name = elem.attr("data-fn");
                     if (elem.attr("data-str") !== undefined)
                         data[name] = elem.text() || "";
+                    else if (elem.attr("data-html") !== undefined)
+                        data[name] = elem.html() || "";
                     else if (elem.attr("data-number") !== undefined)
                         data[name] = Number(elem.text()) || 0;
                     else if (elem.attr("data-bool") !== undefined) {
@@ -435,6 +437,8 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                         data[name] = v === "true" || v > 0 || v === "t";
                     } else if (elem.attr("data-js") !== undefined)
                         data[name] = Function(elem.text()).call(__this__);
+                    else if (elem.attr("data-cmp") !== undefined)
+                        data[name] = compile(elem.children().first(), undefined, tmplFile);
                     else if (elem.attr("data-array") !== undefined) {
                         // let data = [];
                         data[name] = [];
@@ -442,7 +446,9 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                             assignData(data[name], data[name].length, $(this));
                         });
                     } else if (elem.attr("data-object") !== undefined) {
-                        data[name] = {};
+                        if (elem.attr("data-modified") === undefined)
+                            data[name] = {};
+
                         $.each(elem[0].attributes, function () {
                             let reg = /data-(?<t>s|n|b)-(?<n>.+)/.exec(this.name);
                             if (reg) {
@@ -466,9 +472,12 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                         });
                     } else {
                         if (elem.prop("tagName").toLowerCase() === "pf-data"
-                            && elem.children().length === 0)
-                            data[name] = undefined;
-                        else
+                            && elem.children().length === 0) {
+                            if (elem.attr("data-deleted") !== undefined)
+                                delete data[name];
+                            else
+                                data[name] = undefined;
+                        } else
                             data[name] = compile(elem, undefined, tmplFile);
                     }
                 }
