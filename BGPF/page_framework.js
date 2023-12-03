@@ -407,9 +407,7 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                     }
                 });
 
-                __this__['__data__'] = {};
-                children = e.children('pf-data');
-                children.each(function () {
+                /*children.each(function () {
                     var objElem = $(this).remove();
                     var name = objElem.attr('data-fn');
                     if (name) {
@@ -425,6 +423,63 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                         var dataArray = __this__['__data__'][name];
                         dataArray.push(dataObj);
                     }
+                });*/
+                function assignData(data, name, elem) {
+                    // var name = elem.attr("data-fn");
+                    if (elem.attr("data-str") !== undefined)
+                        data[name] = elem.text() || "";
+                    else if (elem.attr("data-number") !== undefined)
+                        data[name] = Number(elem.text()) || 0;
+                    else if (elem.attr("data-bool") !== undefined) {
+                        let v = elem.text().toLowerCase();
+                        data[name] = v === "true" || v > 0 || v === "t";
+                    } else if (elem.attr("data-js") !== undefined)
+                        data[name] = Function(elem.text()).call(__this__);
+                    else if (elem.attr("data-array") !== undefined) {
+                        // let data = [];
+                        data[name] = [];
+                        elem.children().each(function () {
+                            assignData(data[name], data[name].length, $(this));
+                        });
+                    } else if (elem.attr("data-object") !== undefined) {
+                        data[name] = {};
+                        $.each(elem[0].attributes, function () {
+                            let reg = /data-(?<t>s|n|b)-(?<n>.+)/.exec(this.name);
+                            if (reg) {
+                                let v = this.value;
+                                let objName = reg.groups.n;
+                                let t = reg.groups.t;
+                                if (t == 's')
+                                    data[name][objName] = v || "";
+                                else if (t == 'n')
+                                    data[name][objName] = Number(v) || 0;
+                                else if (t == 'b') {
+                                    v = v.toLowerCase();
+                                    data[name][objName] = v === "true" || v > 0 || v === "t" || v === "";
+                                }
+                            }
+                        });
+                        elem.children().each(function () {
+                            let objName = $(this).attr("id") || $(this).attr("data-fn");
+                            if (objName !== undefined)
+                                assignData(data[name], objName, $(this));
+                        });
+                    } else {
+                        if (elem.prop("tagName").toLowerCase() === "pf-data"
+                            && elem.children().length === 0)
+                            data[name] = undefined;
+                        else
+                            data[name] = compile(elem, undefined, tmplFile);
+                    }
+                }
+
+                __this__['__DATA__'] = {};
+                children = e.children('pf-data');
+                children.each(function () {
+                    var dataElem = $(this).remove();
+                    var name = dataElem.attr('data-fn');
+                    if (name)
+                        assignData(__this__.__DATA__, name, dataElem);
                 });
             })(__this__.$);
 
