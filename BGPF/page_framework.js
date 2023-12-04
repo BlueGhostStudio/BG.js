@@ -617,14 +617,18 @@ function compile(src, parent, tmplFile, __text__, attachData) {
             var funSrc = $(this).text();
             var ev = $(this).attr('data-fe');
             if (ev)
-                __CLASS__.prototype.events[ev] = eval('(function (event) {' + funSrc + '})');
+                // __CLASS__.prototype.events[ev] = eval('(function (event) {' + funSrc + '})');
+                __CLASS__.prototype.events[ev] = Function("event", funSrc);
             else {
                 var funName = $(this).attr('data-fn'); //__NAME__($(this));
                 var args = $(this).attr('data-args');
-                if (!args)
-                    args = "";
-                __CLASS__.prototype[funName]
-                    = eval('(function (' + args + ') {' + funSrc + '})');
+                if (args)
+                    args = args.split(/,\s*/);
+                else
+                    args = [];
+                /*__CLASS__.prototype[funName]
+                    = eval('(function (' + args + ') {' + funSrc + '})');*/
+                __CLASS__.prototype[funName] = Function(args, funSrc);
                 __CLASS__.prototype.funs[funName] = __CLASS__.prototype[funName];
                 /*var olp = $(this).attr('data-overloaded-prefix');
                 if (olp) {
@@ -748,7 +752,7 @@ function compile(src, parent, tmplFile, __text__, attachData) {
         var objName = src.attr("data-fn") || src.attr("id");
 
         if (fr !== undefined && frArgs !== undefined) {
-            obj = new __CLASS__(parent, objName, eval('[' + frArgs + ']'));
+            obj = new __CLASS__(parent, objName, frArgs ? frArgs.split(/,\s*/) : []/*eval('[' + frArgs + ']')*/);
         } else
             obj = new __CLASS__(parent, objName);
     }
