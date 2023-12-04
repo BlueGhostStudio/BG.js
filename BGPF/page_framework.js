@@ -127,10 +127,10 @@ __PF_BASE_CLASS__.prototype.putInto = function (p, name, opt) {
         p[name] = this;
     else
         p[randomName(p)] = this;*/
-    if (name !== undefined)
+    if (name !== undefined) {
         this.__NAME__ = name;
-
-    p[this.__NAME__] = this;
+        p[this.__NAME__] = this;
+    }
 
     this._ = p;
     if (this/*.__proto__*/.nonauto) {
@@ -147,10 +147,10 @@ __PF_BASE_CLASS__.prototype.prepend = function (p, name, opt) {
         p[name] = this;
     else
         p[randomName(p)] = this;*/
-    if (name !== undefined)
+    if (name !== undefined) {
         this.__NAME__ = name;
-
-    p[this.__NAME__] = this;
+        p[this.__NAME__] = this;
+    }
 
     this._ = p;
     if (this/*.__proto__*/.nonauto) {
