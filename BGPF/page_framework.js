@@ -63,6 +63,7 @@ __PF_BASE_CLASS__.prototype.create = function (className, name, args) {
 
 __PF_BASE_CLASS__.prototype.__extend__constructors = [];
 __PF_BASE_CLASS__.prototype.__extend__preconstructors = [];
+//__PF_BASE_CLASS__.prototype.__extend__DATA_src = [];
 
 __PF_BASE_CLASS__.prototype.root = function () {
     var p = this._;
@@ -482,14 +483,27 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                     }
                 }
 
+                var dataElems = [];
+                var curProto = Object.getPrototypeOf(__this__);
+                while (curProto instanceof __PF_BASE_CLASS__) {
+                    if (curProto.hasOwnProperty("__extend__DATA_src")) {
+                        console.log(">>>>>>");
+                        dataElems = curProto.__extend__DATA_src.concat(dataElems);
+                    }
+
+                    curProto = Object.getPrototypeOf(curProto);
+                }
+                dataElems.push(e.children('pf-data'));
+
                 __this__['__DATA__'] = {};
-                children = e.children('pf-data');
-                children.each(function () {
-                    var dataElem = $(this).remove();
-                    var name = dataElem.attr('data-fn');
-                    if (name)
-                        assignData(__this__.__DATA__, name, dataElem);
-                });
+                for (let x in dataElems) {
+                    dataElems[x].each(function () {
+                        var dataElem = $(this).remove();
+                        var name = dataElem.attr('data-fn');
+                        if (name)
+                            assignData(__this__.__DATA__, name, dataElem);
+                    });
+                }
             })(__this__.$);
 
 
@@ -571,6 +585,7 @@ function compile(src, parent, tmplFile, __text__, attachData) {
             }
         }*/
 
+        var ext_dataSrc = [];
         src.find('> pf-extend').each(function () {
             try {
                 var extendClass = __CLASS_TABLE__[$(this).attr("data-fr")].prototype;
@@ -590,6 +605,10 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                 else if (typeof ext_var == 'function' && !(x in __CLASS__.prototype))
                     __CLASS__.prototype[x] = ext_var;
             }
+
+            let dataElems = extendClass.src.children("pf-data");
+            if (dataElems.length > 0)
+                ext_dataSrc.push(dataElems);
 
             $(this).remove();
 
@@ -646,6 +665,8 @@ function compile(src, parent, tmplFile, __text__, attachData) {
 
         __CLASS__.prototype.__extend__constructors = baseClass.prototype.__extend__constructors.concat(ext_cstr);
         __CLASS__.prototype.__extend__preconstructors = baseClass.prototype.__extend__preconstructors.concat(ext_pcstr);
+        if (ext_dataSrc.length > 0)
+            __CLASS__.prototype.__extend__DATA_src = ext_dataSrc;
 
         if (fr !== undefined) {
             var subElems = src.find('>[data-putInto],>[data-append],>[data-prepend],>[data-custom-place]').clone();
