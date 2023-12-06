@@ -328,10 +328,12 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                 this.__NAME__ = name;
 
             if (parent) {
-                let i = 0;
-                while(parent[this.__NAME__]) {
-                    this.__NAME__ += '_' + i;
-                    i++;
+                if (parent[this.__NAME__]) {
+                    let i = 0;
+                    while(parent[this.__NAME__ + '_' + i]) {
+                        i++;
+                    }
+                    this.__NAME__ = this.__NAME__ + '_' + i;
                 }
                 parent[this.__NAME__] = this;
             }
