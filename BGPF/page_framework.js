@@ -36,6 +36,15 @@ function __import(js, autoLoad) {
     return the_loader;
 }
 
+function traversePrototypes(obj, cb) {
+    var curProto = Object.getPrototypeOf(obj);
+    while (curProto instanceof __PF_BASE_CLASS__) {
+        cb.bind(this)(curProto);
+
+        curProto = Object.getPrototypeOf(curProto);
+    }
+}
+
 var lastUnname = 0;
 /*function __NAME__(src) {  // 取得html elem的对应的名字
     var fn = src.attr('data-fn');
@@ -191,6 +200,16 @@ __PF_BASE_CLASS__.prototype.remove = function (name) {
 }
 __PF_BASE_CLASS__.prototype.removeSelf = function () {
     this.deleting = true;
+
+    traversePrototypes(this, (proto) => {
+        if (proto.hasOwnProperty("destructor"))
+            proto.destructor.call(this);
+        if (proto.hasOwnProperty("__extend__destructors")) {
+            for (let x in proto.__extend__destructors)
+                proto.__extend__destructors[x].call(this);
+        }
+    });
+
     var keys = Object.keys(this);
     for (let x in keys) {
         var k = keys[x];
@@ -208,6 +227,7 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
         if (typeof this[x] == "object" && this[x].$ != undefined && x != 'NS' && x != '_NS' && x != '_')
             this[x].$.remove();
     }*/
+
     this.$.remove();
 
     var deleted = false;
@@ -350,8 +370,13 @@ function compile(src, parent, tmplFile, __text__, attachData) {
             var __this__ = this;
 
             // preconstructor
-            for (var x in __this__.__extend__preconstructors)
-                __this__.__extend__preconstructors[x].call(this);
+            /*for (var x in __this__.__extend__preconstructors)
+                __this__.__extend__preconstructors[x].call(this);*/
+            traversePrototypes(__this__, (proto) => {
+                if (proto.hasOwnProperty("__extend__preconstructors"))
+                    for (let x in proto.__extend__preconstructors)
+                        proto.__extend__preconstructors[x].call(this);
+            });
 
             if (__this__/*.__proto__*/.preconstructor !== undefined)
                 __this__.preconstructor.call(__this__, args);
@@ -484,15 +509,17 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                 }
 
                 var dataElems = [];
-                var curProto = Object.getPrototypeOf(__this__);
+                /*var curProto = Object.getPrototypeOf(__this__);
                 while (curProto instanceof __PF_BASE_CLASS__) {
-                    if (curProto.hasOwnProperty("__extend__DATA_src")) {
-                        console.log(">>>>>>");
+                    if (curProto.hasOwnProperty("__extend__DATA_src"))
                         dataElems = curProto.__extend__DATA_src.concat(dataElems);
-                    }
 
                     curProto = Object.getPrototypeOf(curProto);
-                }
+                }*/
+                traversePrototypes(__this__, (proto) => {
+                    if (proto.hasOwnProperty("__extend__DATA_src"))
+                        dataElems = proto.__extend__DATA_src.concat(dataElems);
+                });
                 dataElems.push(e.children('pf-data'));
 
                 __this__['__DATA__'] = {};
@@ -507,10 +534,13 @@ function compile(src, parent, tmplFile, __text__, attachData) {
             })(__this__.$);
 
 
-            /*if (__this__.__proto__.__extend__constructor !== undefined)
-                __this__.__extend__constructor.call (__this__);*/
-            for (var x in __this__.__extend__constructors)
-                __this__.__extend__constructors[x].call(this);
+            /*for (var x in __this__.__extend__constructors)
+                __this__.__extend__constructors[x].call(this);*/
+            traversePrototypes(__this__, (proto) => {
+                if (proto.hasOwnProperty("__extend__constructors"))
+                    for (let x in proto.__extend__constructors)
+                        proto.__extend__constructors[x].call(this);
+            });
 
             if (__this__/*.__proto__*/.constructor !== undefined
                 && __this__/*.__proto__*/.nonauto === false)
@@ -561,29 +591,7 @@ function compile(src, parent, tmplFile, __text__, attachData) {
         // var extend = src.attr("data-extend");
         var ext_cstr = [];
         var ext_pcstr = [];
-        /*if (extend) {
-            var extendClass = __CLASS_TABLE__[extend];
-            if (extendClass) {
-                for (var x in extendClass.prototype.funs) {
-                    if (x === "constructor")
-                        ext_cstr[0] = extendClass.prototype.funs[x];
-                    else if (x === "preconstructor")
-                        ext_pcstr[0] = extendClass.prototype.funs[x];
-                    //__CLASS__.prototype.__extend__constructor = extendClass.prototype.funs[x];
-                    else {
-                        var funProto = extendClass.prototype.funs[x];
-                        __CLASS__.prototype[x] = funProto;
-                        __CLASS__.prototype.funs[x] = funProto;
-
-                        if (overloaded_prefix) {
-                            var olFunName = overloaded_prefix + '_' + x;
-                            __CLASS__.prototype[olFunName] = funProto;
-                            __CLASS__.prototype.funs[olFunName] = funProto;
-                        }
-                    }
-                }
-            }
-        }*/
+        var ext_destr = [];
 
         var ext_dataSrc = [];
         src.find('> pf-extend').each(function () {
@@ -602,6 +610,8 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                     ext_cstr.push(ext_var);
                 else if (x === 'preconstructor')
                     ext_pcstr.push(ext_var);
+                else if (x === 'destructor')
+                    ext_destr.push(ext_var);
                 else if (typeof ext_var == 'function' && !(x in __CLASS__.prototype))
                     __CLASS__.prototype[x] = ext_var;
             }
@@ -663,8 +673,14 @@ function compile(src, parent, tmplFile, __text__, attachData) {
             $(this).remove();
         });
 
-        __CLASS__.prototype.__extend__constructors = baseClass.prototype.__extend__constructors.concat(ext_cstr);
-        __CLASS__.prototype.__extend__preconstructors = baseClass.prototype.__extend__preconstructors.concat(ext_pcstr);
+        /*__CLASS__.prototype.__extend__constructors = baseClass.prototype.__extend__constructors.concat(ext_cstr);
+        __CLASS__.prototype.__extend__preconstructors = baseClass.prototype.__extend__preconstructors.concat(ext_pcstr);*/
+        if (ext_cstr.length > 0)
+            __CLASS__.prototype.__extend__constructors = ext_cstr;
+        if (ext_pcstr.length > 0)
+            __CLASS__.prototype.__extend__preconstructors = ext_pcstr;
+        if (ext_destr.length > 0)
+            __CLASS__.prototype.__extend__destructors = ext_destr;
         if (ext_dataSrc.length > 0)
             __CLASS__.prototype.__extend__DATA_src = ext_dataSrc;
 
