@@ -474,7 +474,7 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                             assignData(data[name], data[name].length, $(this));
                         });
                     } else if (elem.attr("data-object") !== undefined) {
-                        if (elem.attr("data-modified") === undefined)
+                        if (elem.attr("data-modified") === undefined || !(name in data))
                             data[name] = {};
 
                         $.each(elem[0].attributes, function () {
