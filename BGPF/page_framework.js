@@ -70,9 +70,9 @@ __PF_BASE_CLASS__.prototype.create = function (className, name, args) {
         return new __CLASS__(this, name, args);
 }
 
-__PF_BASE_CLASS__.prototype.__extend__constructors = [];
-__PF_BASE_CLASS__.prototype.__extend__preconstructors = [];
-//__PF_BASE_CLASS__.prototype.__extend__DATA_src = [];
+__PF_BASE_CLASS__.prototype.__extend__constructors__ = [];
+__PF_BASE_CLASS__.prototype.__extend__preconstructors__ = [];
+//__PF_BASE_CLASS__.prototype.__extend__DATA_src__ = [];
 
 __PF_BASE_CLASS__.prototype.root = function () {
     var p = this._;
@@ -204,9 +204,9 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
     traversePrototypes(this, (proto) => {
         if (proto.hasOwnProperty("destructor"))
             proto.destructor.call(this);
-        if (proto.hasOwnProperty("__extend__destructors")) {
-            for (let x in proto.__extend__destructors)
-                proto.__extend__destructors[x].call(this);
+        if (proto.hasOwnProperty("__extend_destructors__")) {
+            for (let x in proto.__extend_destructors__)
+                proto.__extend_destructors__[x].call(this);
         }
     });
 
@@ -222,6 +222,10 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
             else
                 delete this[k];
         }
+    }
+
+    for (let x in this.events) {
+        this.$.off(this.events[x].event, this.events[x].callback);
     }
     /*for (let x in this) {
         if (typeof this[x] == "object" && this[x].$ != undefined && x != 'NS' && x != '_NS' && x != '_')
@@ -372,12 +376,12 @@ function compile(src, parent, tmplFile, __text__, attachData) {
             var __this__ = this;
 
             // preconstructor
-            /*for (var x in __this__.__extend__preconstructors)
-                __this__.__extend__preconstructors[x].call(this);*/
+            /*for (var x in __this__.__extend__preconstructors__)
+                __this__.__extend__preconstructors__[x].call(this);*/
             traversePrototypes(__this__, (proto) => {
-                if (proto.hasOwnProperty("__extend__preconstructors"))
-                    for (let x in proto.__extend__preconstructors)
-                        proto.__extend__preconstructors[x].call(this);
+                if (proto.hasOwnProperty("__extend__preconstructors__"))
+                    for (let x in proto.__extend__preconstructors__)
+                        proto.__extend__preconstructors__[x].call(this);
             });
 
             if (__this__/*.__proto__*/.preconstructor !== undefined)
@@ -513,14 +517,14 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                 var dataElems = [];
                 /*var curProto = Object.getPrototypeOf(__this__);
                 while (curProto instanceof __PF_BASE_CLASS__) {
-                    if (curProto.hasOwnProperty("__extend__DATA_src"))
-                        dataElems = curProto.__extend__DATA_src.concat(dataElems);
+                    if (curProto.hasOwnProperty("__extend__DATA_src__"))
+                        dataElems = curProto.__extend__DATA_src__.concat(dataElems);
 
                     curProto = Object.getPrototypeOf(curProto);
                 }*/
                 traversePrototypes(__this__, (proto) => {
-                    if (proto.hasOwnProperty("__extend__DATA_src"))
-                        dataElems = proto.__extend__DATA_src.concat(dataElems);
+                    if (proto.hasOwnProperty("__extend__DATA_src__"))
+                        dataElems = proto.__extend__DATA_src__.concat(dataElems);
                 });
                 dataElems.push(e.children('pf-data'));
 
@@ -536,12 +540,12 @@ function compile(src, parent, tmplFile, __text__, attachData) {
             })(__this__.$);
 
 
-            /*for (var x in __this__.__extend__constructors)
-                __this__.__extend__constructors[x].call(this);*/
+            /*for (var x in __this__.__extend__constructors__)
+                __this__.__extend__constructors__[x].call(this);*/
             traversePrototypes(__this__, (proto) => {
-                if (proto.hasOwnProperty("__extend__constructors"))
-                    for (let x in proto.__extend__constructors)
-                        proto.__extend__constructors[x].call(this);
+                if (proto.hasOwnProperty("__extend__constructors__"))
+                    for (let x in proto.__extend__constructors__)
+                        proto.__extend__constructors__[x].call(this);
             });
 
             if (__this__/*.__proto__*/.constructor !== undefined
@@ -549,7 +553,7 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                 __this__.constructor.call(__this__, args);
 
             for (var x in __this__/*.__proto__*/.events) {
-                __this__.$.on(x, __this__/*.__proto__*/.events[x].bind(this));
+                __this__.$.on(__this__.events[x].event, __this__/*.__proto__*/.events[x].callback.bind(this));
             }
             //__this__.$.find('*').removeAttr('data-fi data-fr data-fw data-ft data-args data-fn data-fns data-putInto data-append data-prepend data-custom-place data-overloaded-prefix');
             this.$.removeAttr('data-fi data-fr data-fw data-ft data-args data-fn data-fns data-putInto data-append data-prepend data-custom-place data-overloaded-prefix');
@@ -587,7 +591,6 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                 return 'PF::' + className;
         }
         __CLASS__.prototype.events = [];
-        __CLASS__.prototype.funs = [];
         __CLASS__.prototype.__superTmpl__ = fr;
 
         // var extend = src.attr("data-extend");
@@ -618,73 +621,50 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                     __CLASS__.prototype[x] = ext_var;
             }
 
+            __CLASS__.prototype.events = __CLASS__.prototype.events.concat(extendClass.events);
+
             let dataElems = extendClass.src.children("pf-data");
             if (dataElems.length > 0)
                 ext_dataSrc.push(dataElems);
 
             $(this).remove();
-
-            /*for (var x in extendClass.funs) {
-                if (x === "constructor")
-                    ext_cstr.push(extendClass.funs[x]);
-                else if (x === "preconstructor")
-                    ext_pcstr.push(extendClass.funs[x]);
-                else {
-                    var funProto = extendClass.funs[x];
-                    __CLASS__.prototype[x] = funProto;
-                    __CLASS__.prototype.funs[x] = funProto;
-
-                    if (overloaded_prefix) {
-                        var olFunName = overloaded_prefix + '_' + x;
-                        __CLASS__.prototype[olFunName] = funProto;
-                        __CLASS__.prototype.funs[olFunName] = funProto;
-                    }
-                }
-                $(this).remove();
-            }*/
         });
 
         src.find('> pf-script').each(function () {
             var funSrc = $(this).text();
             var ev = $(this).attr('data-fe');
-            if (ev)
+            var args = $(this).attr('data-args');
+            if (args)
+                args = args.split(/,\s*/);
+            else
+                args = [];
+            if (ev) {
                 // __CLASS__.prototype.events[ev] = eval('(function (event) {' + funSrc + '})');
-                __CLASS__.prototype.events[ev] = Function("event", funSrc);
-            else {
+                //__CLASS__.prototype.events[ev] = Function("event", args, funSrc);
+                args.unshift('event');
+                __CLASS__.prototype.events.push({
+                    event: ev,
+                    callback: Function(args, funSrc)
+                });
+            } else {
                 var funName = $(this).attr('data-fn'); //__NAME__($(this));
-                var args = $(this).attr('data-args');
-                if (args)
-                    args = args.split(/,\s*/);
-                else
-                    args = [];
                 /*__CLASS__.prototype[funName]
                     = eval('(function (' + args + ') {' + funSrc + '})');*/
                 __CLASS__.prototype[funName] = Function(args, funSrc);
-                __CLASS__.prototype.funs[funName] = __CLASS__.prototype[funName];
-                /*var olp = $(this).attr('data-overloaded-prefix');
-                if (olp) {
-                    __CLASS__.prototype[olp + funName] = __CLASS__.prototype[funName];
-                    __CLASS__.prototype.funs[olp + funName] = __CLASS__.prototype[funName];
-                }
-                if (overloaded_prefix) {
-                    var olFunName = overloaded_prefix + '_' + funName;
-                    __CLASS__.prototype[olFunName] = __CLASS__.prototype[funName];
-                    __CLASS__.prototype.funs[olFunName] = __CLASS__.prototype[funName];
-                }*/
             }
             $(this).remove();
         });
 
-        /*__CLASS__.prototype.__extend__constructors = baseClass.prototype.__extend__constructors.concat(ext_cstr);
-        __CLASS__.prototype.__extend__preconstructors = baseClass.prototype.__extend__preconstructors.concat(ext_pcstr);*/
+        /*__CLASS__.prototype.__extend__constructors__ = baseClass.prototype.__extend__constructors__.concat(ext_cstr);
+        __CLASS__.prototype.__extend__preconstructors__ = baseClass.prototype.__extend__preconstructors__.concat(ext_pcstr);*/
         if (ext_cstr.length > 0)
-            __CLASS__.prototype.__extend__constructors = ext_cstr;
+            __CLASS__.prototype.__extend__constructors__ = ext_cstr;
         if (ext_pcstr.length > 0)
-            __CLASS__.prototype.__extend__preconstructors = ext_pcstr;
+            __CLASS__.prototype.__extend__preconstructors__ = ext_pcstr;
         if (ext_destr.length > 0)
-            __CLASS__.prototype.__extend__destructors = ext_destr;
+            __CLASS__.prototype.__extend_destructors__ = ext_destr;
         if (ext_dataSrc.length > 0)
-            __CLASS__.prototype.__extend__DATA_src = ext_dataSrc;
+            __CLASS__.prototype.__extend__DATA_src__ = ext_dataSrc;
 
         if (fr !== undefined) {
             var subElems = src.find('>[data-putInto],>[data-append],>[data-prepend],>[data-custom-place]').clone();
