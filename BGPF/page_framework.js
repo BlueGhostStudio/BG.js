@@ -201,6 +201,13 @@ __PF_BASE_CLASS__.prototype.remove = function (name) {
 __PF_BASE_CLASS__.prototype.removeSelf = function () {
     this.deleting = true;
 
+    for (let x in this.__autoCleanup__) {
+        if (this.__autoCleanup__[x] instanceof __PF_BASE_CLASS__)
+            this.__autoCleanup__[x].removeSelf();
+        else if (this.__autoCleanup__[x] !== undefined)
+            delete this.__autoCleanup__[x];
+    }
+
     traversePrototypes(this, (proto) => {
         if (proto.hasOwnProperty("destructor"))
             proto.destructor.call(this);
@@ -217,7 +224,7 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
             this[k].removeSelf();
         }*/
         if (k != '_' && k != 'NS' && k != '_NS' && k != '$' && this[k] !== undefined && this[k] !== null && this[k] !== this) {
-            if (this instanceof __PF_BASE_CLASS__ && !this[k].deleting)
+            if (this[k] instanceof __PF_BASE_CLASS__ && !this[k].deleting)
                 this[k].removeSelf();
             else
                 delete this[k];
@@ -373,6 +380,7 @@ function compile(src, parent, tmplFile, __text__, attachData) {
             if (parent === undefined && this/*.__proto__*/.tmpl) // when no give parent and the obj is tmpl
                 this._ = this/*.__proto__*/.parent;
 
+            this.__autoCleanup__ = [];
 
             traversePrototypes(this, (proto) => {
                 if (proto.hasOwnProperty("__extend__preconstructors__"))
