@@ -37,7 +37,7 @@ function __import(js, autoLoad) {
 }
 
 function traversePrototypes(obj, cb) {
-    var curProto = Object.getPrototypeOf(obj);
+    var curProto = obj;
     while (curProto instanceof __PF_BASE_CLASS__) {
         cb.bind(this)(curProto);
 
