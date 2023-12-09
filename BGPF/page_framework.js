@@ -462,7 +462,8 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                     }
                 });*/
                 function assignData(data, name, elem) {
-                    // var name = elem.attr("data-fn");
+                    /* data-stal: standalone
+                     * data-fplc: followsParentLifecycle */
                     if (elem.attr("data-str") !== undefined)
                         data[name] = elem.text() || "";
                     else if (elem.attr("data-html") !== undefined)
@@ -474,9 +475,15 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                         data[name] = v === "true" || v > 0 || v === "t";
                     } else if (elem.attr("data-js") !== undefined)
                         data[name] = Function(elem.text()).call(__this__);
-                    else if (elem.attr("data-cmp") !== undefined)
-                        data[name] = compile(elem.children().first(), undefined, tmplFile);
-                    else if (elem.attr("data-array") !== undefined) {
+                    else if (elem.attr("data-cmp") !== undefined) {
+                        let p = elem.attr('data-stal') !== undefined ? undefined : __this__; 
+                        let cmpElem = elem.children().first();
+                        cmpElem.attr('data-fn', name);
+                        data[name] = compile(cmpElem, p, tmplFile);
+
+                        if (!p && elem.attr('data-fplc') !== undefined)
+                            __this__.__autoCleanup__.push(data[name]);
+                    } else if (elem.attr("data-array") !== undefined) {
                         // let data = [];
                         data[name] = [];
                         elem.children().each(function () {
@@ -510,12 +517,21 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                     } else {
                         if (elem.prop("tagName").toLowerCase() === "pf-data"
                             && elem.children().length === 0) {
-                            if (elem.attr("data-deleted") !== undefined)
+                            if (elem.attr("data-deleted") !== undefined) {
+                                if (data[name] instanceof __PF_BASE_CLASS__)
+                                    data[name].removeSelf();
+
                                 delete data[name];
-                            else
+                            } else
                                 data[name] = undefined;
-                        } else
-                            data[name] = compile(elem, undefined, tmplFile);
+                        } else {
+                            let p = elem.attr('data-stal') !== undefined ? undefined : __this__;
+                            let fplc = elem.attr('data-fplc') !== undefined;
+                            data[name] = compile(elem, p, tmplFile);
+
+                            if (!p && fplc)
+                                __this__.__autoCleanup__.push(data[name]);
+                        }
                     }
                 }
 
@@ -561,7 +577,7 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                 __this__.$.on(__this__.events[x].event, __this__/*.__proto__*/.events[x].callback.bind(this));
             }
             //__this__.$.find('*').removeAttr('data-fi data-fr data-fw data-ft data-args data-fn data-fns data-putInto data-append data-prepend data-custom-place data-overloaded-prefix');
-            this.$.removeAttr('data-fi data-fr data-fw data-ft data-args data-fn data-fns data-putInto data-append data-prepend data-custom-place data-overloaded-prefix');
+            this.$.removeAttr('data-fi data-fr data-fw data-ft data-args data-fn data-fns data-putInto data-append data-prepend data-custom-place data-overloaded-prefix data-fplc data-stal');
             __this__.$.find('pf-script').remove();
         }
 
