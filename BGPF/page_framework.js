@@ -39,7 +39,7 @@ function __import(js, autoLoad) {
 function traversePrototypes(obj, cb) {
     var curProto = obj;
     while (curProto instanceof __PF_BASE_CLASS__) {
-        cb.bind(this)(curProto);
+        cb.bind(obj)(curProto);
 
         curProto = Object.getPrototypeOf(curProto);
     }
@@ -217,7 +217,7 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
             this[k].removeSelf();
         }*/
         if (k != '_' && k != 'NS' && k != '_NS' && k != '$' && this[k] !== undefined && this[k] !== null && this[k] !== this) {
-            if (typeof this[k] == 'object' && this[k].removeSelf && !this[k].deleting)
+            if (this instanceof __PF_BASE_CLASS__ && !this[k].deleting)
                 this[k].removeSelf();
             else
                 delete this[k];
@@ -373,20 +373,17 @@ function compile(src, parent, tmplFile, __text__, attachData) {
             if (parent === undefined && this/*.__proto__*/.tmpl) // when no give parent and the obj is tmpl
                 this._ = this/*.__proto__*/.parent;
 
-            var __this__ = this;
 
-            // preconstructor
-            /*for (var x in __this__.__extend__preconstructors__)
-                __this__.__extend__preconstructors__[x].call(this);*/
-            traversePrototypes(__this__, (proto) => {
+            traversePrototypes(this, (proto) => {
                 if (proto.hasOwnProperty("__extend__preconstructors__"))
                     for (let x in proto.__extend__preconstructors__)
                         proto.__extend__preconstructors__[x].call(this);
             });
 
-            if (__this__/*.__proto__*/.preconstructor !== undefined)
-                __this__.preconstructor.call(__this__, args);
+            if (this.preconstructor !== undefined)
+                this.preconstructor.call(this, args);
 
+            var __this__ = this;
             // 编译类属性对象
             (function iteratorChildren(e) {
                 var children = e.children('[data-ft]');
@@ -420,7 +417,7 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                     //__this__[obj.__NAME__] = obj;
                 });
 
-                children = e.children('[data-fw="true"]');
+                children = e.children('[data-fw]');
                 children.each(function () {
                     iteratorChildren($(this));
                 });
@@ -705,10 +702,7 @@ function compile(src, parent, tmplFile, __text__, attachData) {
         }
 
 
-        if (src.attr('data-nonauto') === 'true')
-            __CLASS__.prototype.nonauto = true;
-        else
-            __CLASS__.prototype.nonauto = false;
+        __CLASS__.prototype.nonauto = src.attr('data-nonauto') !== undefined;
 
         var nsName = src.attr('data-fns');
         if (nsName)
