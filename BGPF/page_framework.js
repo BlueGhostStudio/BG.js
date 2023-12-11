@@ -150,8 +150,8 @@ __PF_BASE_CLASS__.prototype.putInto = function (p, name, opt) {
     }
 }
 __PF_BASE_CLASS__.prototype.prepend = function (p, name, opt) {
-    /*p.$.prepend(this.$);
-    if (name === true)
+    p.$.prepend(this.$);
+    /*if (name === true)
         p[this.__NAME__] = this;
     else if (name !== undefined)
         p[name] = this;
