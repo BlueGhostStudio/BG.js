@@ -473,7 +473,9 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                     else if (elem.attr("data-bool") !== undefined) {
                         let v = elem.text().toLowerCase();
                         data[name] = v === "true" || v > 0 || v === "t";
-                    } else if (elem.attr("data-js") !== undefined)
+                    } else if (elem.attr("data-null") !== undefined)
+                        data[name] = null;
+                    else if (elem.attr("data-js") !== undefined)
                         data[name] = Function(elem.text()).call(__this__);
                     else if (elem.attr("data-cmp") !== undefined) {
                         let p = elem.attr('data-stal') !== undefined ? undefined : __this__; 
