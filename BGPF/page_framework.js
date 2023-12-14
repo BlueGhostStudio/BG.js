@@ -129,6 +129,31 @@ __PF_BASE_CLASS__.prototype.hide = function () { this.$.hide() }
     return name;
 }*/
 
+__PF_BASE_CLASS__.prototype.refInParent = function(cb) {
+    if (!cb)
+        return;
+
+    let refed = false;
+    if (this._) {
+        for (let x in this._) {
+            if (this._[x] instanceof __PF_BASE_CLASS__
+                && this._[x] === this
+                && x !== 'NS' && x !== '_NS' && x !== '_') {
+                cb(this._, x);
+                refed = true;
+            }
+        }
+    }
+
+    return refed;
+}
+
+__PF_BASE_CLASS__.prototype.removeFromeParent = function () {
+    return this.refInParent((parent, prop) => {
+        delete parent[prop];
+    });
+}
+
 __PF_BASE_CLASS__.prototype.putInto = function (p, name, opt) {
     p.$.append(this.$);
     /*if (name === true)
@@ -138,17 +163,19 @@ __PF_BASE_CLASS__.prototype.putInto = function (p, name, opt) {
     else
         p[randomName(p)] = this;*/
     if (name !== undefined) {
+        this.removeFromeParent();
         this.__NAME__ = name;
         p[this.__NAME__] = this;
+        this._ = p;
     }
 
-    this._ = p;
     if (this/*.__proto__*/.nonauto) {
         var args;
         if (opt) args = opt.args;
         this.constructor(args);
     }
 }
+
 __PF_BASE_CLASS__.prototype.prepend = function (p, name, opt) {
     p.$.prepend(this.$);
     /*if (name === true)
@@ -158,11 +185,12 @@ __PF_BASE_CLASS__.prototype.prepend = function (p, name, opt) {
     else
         p[randomName(p)] = this;*/
     if (name !== undefined) {
+        this.removeFromeParent();
         this.__NAME__ = name;
         p[this.__NAME__] = this;
+        this._ = p;
     }
 
-    this._ = p;
     if (this/*.__proto__*/.nonauto) {
         var args;
         if (opt) args = opt.args;
@@ -202,9 +230,10 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
     this.deleting = true;
 
     for (let x in this.__autoCleanup__) {
-        if (this.__autoCleanup__[x] instanceof __PF_BASE_CLASS__)
+        if (this.__autoCleanup__[x] instanceof __PF_BASE_CLASS__) {
             this.__autoCleanup__[x].removeSelf();
-        else if (this.__autoCleanup__[x] !== undefined)
+            delete this.__autoCleanup__[x];
+        } else if (this.__autoCleanup__[x] !== undefined)
             delete this.__autoCleanup__[x];
     }
 
@@ -224,9 +253,9 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
             this[k].removeSelf();
         }*/
         if (k != '_' && k != 'NS' && k != '_NS' && k != '$' && this[k] !== undefined && this[k] !== null && this[k] !== this) {
-            if (this[k] instanceof __PF_BASE_CLASS__ && !this[k].deleting)
+            if (this[k] instanceof __PF_BASE_CLASS__ && !this[k].deleting) {
                 this[k].removeSelf();
-            else
+            } else
                 delete this[k];
         }
     }
@@ -241,7 +270,7 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
 
     this.$.remove();
 
-    var deleted = false;
+    /*var deleted = false;
     if (this._) {
         for (let x in this._) {
             if (this._[x] === undefined || this._[x] === null ||
@@ -256,7 +285,8 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
         }
     }
 
-    if (!deleted)
+    if (!deleted)*/
+    if (this.removeFromeParent())
         delete this;
 
     this.destroy = true;
