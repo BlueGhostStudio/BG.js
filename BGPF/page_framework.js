@@ -135,10 +135,9 @@ __PF_BASE_CLASS__.prototype.refInParent = function(cb) {
 
     let refed = false;
     if (this._) {
-        for (let x in this._) {
+        for (let x of Object.keys(this._)) {
             if (this._[x] instanceof __PF_BASE_CLASS__
-                && this._[x] === this
-                && x !== 'NS' && x !== '_NS' && x !== '_') {
+                && this._[x] === this) {
                 cb(this._, x);
                 refed = true;
             }
@@ -204,8 +203,9 @@ __PF_BASE_CLASS__.prototype.__CLASSNAME__ = function () {
     return this.toString();
 }
 __PF_BASE_CLASS__.prototype.each = function (cb) {
-    for (var x in this) {
-        if (!this[x] || typeof this[x] !== 'object' || !("$" in this[x]) || x === 'NS' || x === '_NS' || x === '_')
+    for (let x of Object.keys(this)) {
+        //if (!this[x] || typeof this[x] !== 'object' || !("$" in this[x]) || x === 'NS' || x === '_NS' || x === '_')
+        if (!this[x] || !(this[x] instanceof __PF_BASE_CLASS__))
             continue;
 
         cb.call(this, x, this[x]);
@@ -246,19 +246,24 @@ __PF_BASE_CLASS__.prototype.removeSelf = function () {
         }
     });
 
-    var keys = Object.keys(this);
+    for (let x of Object.keys(this)) {
+        if (this[x] && this[x] !== this) {
+            if (this[x] instanceof __PF_BASE_CLASS__ && !this[x].deleting)
+                this[x].removeSelf();
+            else
+                delete this[x];
+        }
+    }
+    /*var keys = Object.keys(this);
     for (let x in keys) {
         var k = keys[x];
-        /*if (k != '_' && k != 'NS' && k != '_NS' && k != '$' && typeof this[k] == "object" && this[k].$ != undefined) {
-            this[k].removeSelf();
-        }*/
         if (k != '_' && k != 'NS' && k != '_NS' && k != '$' && this[k] !== undefined && this[k] !== null && this[k] !== this) {
             if (this[k] instanceof __PF_BASE_CLASS__ && !this[k].deleting) {
                 this[k].removeSelf();
             } else
                 delete this[k];
         }
-    }
+    }*/
 
     for (let x in this.events) {
         this.$.off(this.events[x].event, this.events[x].callback);
@@ -358,6 +363,16 @@ function compile(src, parent, tmplFile, __text__, attachData) {
 
     if (__CLASS__ === undefined) {
         __CLASS__ = function (parent, name, args) {
+            Object.defineProperties(this, {
+                $: { enumerable: false, writable: true },
+                _: { enumerable: false, writable: true },
+                NS: { enumerable: false, writable: true },
+                _NS: { enumerable: false, writable: true },
+                __NAME__: { enumerable: false, writable: true },
+                __DATA__: { enumerable: false, writable: true, value: {} },
+                __TEXT__: { enumerable: false, writable: true },
+                __autoCleanup__: { enumerable: false, writable: true, value: [] }
+            });
             if (name === undefined) {
                 if (parent)
                     this.__NAME__ = src.prop("tagName").toLowerCase();
@@ -410,7 +425,7 @@ function compile(src, parent, tmplFile, __text__, attachData) {
             if (parent === undefined && this/*.__proto__*/.tmpl) // when no give parent and the obj is tmpl
                 this._ = this/*.__proto__*/.parent;
 
-            this.__autoCleanup__ = [];
+            //this.__autoCleanup__ = [];
 
             traversePrototypes(this, (proto) => {
                 if (proto.hasOwnProperty("__extend__preconstructors__"))
@@ -581,7 +596,7 @@ function compile(src, parent, tmplFile, __text__, attachData) {
                 });
                 dataElems.push(e.children('pf-data'));
 
-                __this__['__DATA__'] = {};
+                // __this__['__DATA__'] = {};
                 for (let x in dataElems) {
                     dataElems[x].each(function () {
                         var dataElem = $(this).remove();
