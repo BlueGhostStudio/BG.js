@@ -693,7 +693,7 @@ function compile(src, parent, tmplFile, __text__, attachData) {
 
             let dataElems = extendClass.src.children("pf-data");
             if (dataElems.length > 0)
-                ext_dataSrc.push(dataElems);
+                ext_dataSrc.push(dataElems.clone());
 
             $(this).remove();
         });
